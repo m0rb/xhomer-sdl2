@@ -251,10 +251,7 @@ void pro_serial_reset (int dev, int portnum)
 {
 	if (pro_ser_sfd[dev] == -1)
 	{
-	  /* O_NOCTTY is needed to ensure the pro serial port does
-	     not become a controlling tty device for xhomer itself. */                                                            
-
-	  pro_ser_sfd[dev] = open(pro_serial_devname[portnum], O_RDWR|O_NONBLOCK|O_NOCTTY);
+	  pro_ser_sfd[dev] = open(pro_serial_devname[portnum], O_RDWR|O_NONBLOCK);
 
 	  if (pro_ser_sfd[dev] == -1)
 	  {

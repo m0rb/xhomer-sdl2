@@ -181,7 +181,7 @@ char		*strtmp;
 
 
 	printf("\n");
-	printf("XHOMER: Digital Pro/350 emulator (version %s)\n", PRO_VERSION);
+	printf("XHOMER-SDL2: Digital Pro/350 emulator (version %s)\n", PRO_VERSION);
 	printf("(Press ctrl-F1, while the emulator window has focus, to access the control menu)\n");
 	printf("\n");
 
@@ -294,8 +294,10 @@ char		*strtmp;
 
 	/* Make default rd assignments */
 
-	if (pro_rd_file != NULL)
+	if (pro_rd_file != NULL) {
 	  free(pro_rd_file);
+	  pro_rd_file = NULL;
+	}
 	pro_rd_file = strdup("pos32.rd");
 
 	pro_rd_heads = 0;
@@ -306,8 +308,10 @@ char		*strtmp;
 
 	for(k=0; k<4; k++)
 	{
-	  if (pro_rx_file[k] != NULL)
+	  if (pro_rx_file[k] != NULL) {
 	    free(pro_rx_file[k]);
+	    pro_rx_file[k] = NULL;
+	  }
 	  pro_rx_file[k] = strdup("");
 	}
 
@@ -315,13 +319,17 @@ char		*strtmp;
 
 	for(k=0; k<4; k++)
 	{
-	  if (pro_rx_dir[k] != NULL)
+	  if (pro_rx_dir[k] != NULL) {
 	    free(pro_rx_dir[k]);
+	    pro_rx_dir[k] = NULL;
+	  }
 	  pro_rx_dir[k] = strdup("./");
 	}
 
-	if (pro_rd_dir != NULL)
+	if (pro_rd_dir != NULL) {
 	  free(pro_rd_dir);
+	  pro_rd_dir = NULL;
+	}
 	pro_rd_dir = strdup("./");
 
 	/* Read configuration file */
@@ -680,6 +688,17 @@ char		*strtmp;
 	            pro_exit_on_halt = 0;
 	          else if (scmp(strv[0], "on", -1, 1, 1, 1) > -1)
 	            pro_exit_on_halt = 1;
+	          else
+	            error = 1;
+		}
+
+		/* SDL2 Renderer Backend */
+		else if (scmp(stra, "sdl2_renderer", -1, 1, 1, numpar) > -1)
+		{
+	          if (scmp(strv[0], "opengl", -1, 1, 1, 1) > -1)
+	            pro_sdl_opengl = 1;
+	          else if (scmp(strv[0], "software", -1, 1, 1, 1) > -1)
+	            pro_sdl_opengl = 0;
 	          else
 	            error = 1;
 		}

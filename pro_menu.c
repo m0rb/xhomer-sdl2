@@ -29,11 +29,16 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
 #include "pdp11_defs.h"
 #include "pro_lk201.h"
 
-#define MENU_X		24			/* x position of top of menu */
-#define MENU_Y		2			/* y position of top of menu */
+int pro_menu_x = 24;
+int pro_menu_y = 2;
+
+#define MENU_X		pro_menu_x		/* x position of top of menu */
+#define MENU_Y		pro_menu_y		/* y position of top of menu */
 
 #define MENU_BW		4			/* width of menu border */
 #define MENU_AW		30			/* active width of menu */
@@ -46,9 +51,9 @@
 #define MENU_PX		(MENU_X+1)
 #define MENU_PY		(MENU_Y+MENU_BH+2+pro_menu_pos)
 
-#define MENU_TOP_NUM	13			/* number of top level menu items */
+#define MENU_TOP_NUM	14			/* number of top level menu items */
 #define MENU_SERIAL_NUM	8			/* number of serial menu items */
-#define MENU_ABOUT_NUM	13			/* number of about menu items */
+#define MENU_ABOUT_NUM 13	 	  /* number of about menu items */
 
 #define MENU_TOP	0
 #define MENU_SERIAL	1
@@ -67,14 +72,15 @@
 #define MENU_TOP_REST	9
 #define MENU_TOP_RESET	10
 #define MENU_TOP_ABOUT	11
-#define MENU_TOP_SHUT	12
+#define MENU_TOP_RENDER 12
+#define MENU_TOP_SHUT	13
 
 #define MENU_MAXENTRIES	1024		/* maximum number of menu entries */
 #define MENU_MAXFILELEN	255		/* maximum filename length */
 
 LOCAL int	pro_menu_last_char;	/* tracks last char, for auto-repeat */
 LOCAL int	pro_menu_key_ctrl;	/* tracks whether ctrl key is depressed */
-LOCAL int	pro_menu_on;		/* tracks whether menu is on */
+int	pro_menu_on;		/* tracks whether menu is on */
 LOCAL int	pro_menu_top_start;	/* start item number of item list */
 LOCAL int	pro_menu_top_pos;	/* menu item selected */
 LOCAL int	pro_menu_serial_start;	/* start item number of item list */
@@ -109,17 +115,18 @@ void pro_menu_bar (int pro_menu_pos)
 void pro_menu_concat (char *s1, char *s2, char *s3, int n)
 {
 int	i, pos;
-
+size_t s2len = s2 ? strlen(s2) : 0;
+size_t s3len = s3 ? strlen(s3) : 0;
 
 	pos = 0;
 
 	if (s2 != NULL)
-	  for(i=0; i<strlen(s2); i++)
+	  for(i=0; i<s2len; i++)
 	  if (pos<n)
 	    s1[pos++] = s2[i];
 
 	if (s3 != NULL)
-	  for(i=0; i<strlen(s3); i++)
+	  for(i=0; i<s3len; i++)
 	  if (pos<n)
 	    s1[pos++] = s3[i];
 
@@ -406,7 +413,6 @@ char		*dir = NULL;
 	        /* swap */
 
 	        strcpy(strtemp, item[i-1]);
-	        strcpy(item[i-1], item[i]);
 	        strcpy(item[i], strtemp);
 	      }
 	    }
@@ -513,20 +519,19 @@ int	i;
 	pro_menu_pos = MENU_ABOUT_NUM - 1;
 	pro_menu_items = MENU_ABOUT_NUM;
 
-	sprintf(title, "About XHOMER");
-
-	sprintf(item[0], "Welcome to  XHOMER, a  Digital");
-	sprintf(item[1], "Pro/350   machine    emulator,");
-	sprintf(item[2], "written by  Tarik Isani.  This");
-	sprintf(item[3], "emulator   is   based   on   a");
-	sprintf(item[4], "slightly  modified  version of");
-	sprintf(item[5], "the  PDP-11 CPU core from  the");
-	sprintf(item[6], "SIMH simulator.  Download from");
-	sprintf(item[7], "http://xhomer.isani.org/");
-	sprintf(item[8], " ");
-	sprintf(item[9], "Please direct any questions or");
-	sprintf(item[10], "feedback to: xhomer@isani.org");
-	sprintf(item[11], " ");
+	sprintf(title, "About XHOMER-SDL2");
+  sprintf(item[0], "XHOMER-SDL2 is  an  unofficial");
+  sprintf(item[1], "fork that expands on the hard ");
+  sprintf(item[2], "work of the original author(s)");
+  sprintf(item[3], "                         -morb");
+  sprintf(item[4], " ");
+	sprintf(item[5], "Welcome to  XHOMER, a  Digital");
+	sprintf(item[6], "Pro/350   machine    emulator,");
+	sprintf(item[7], "written by  Tarik Isani.  This");
+	sprintf(item[8], "emulator   is   based   on   a");
+	sprintf(item[9], "slightly  modified  version of");
+	sprintf(item[10], "the  PDP-11 CPU core from  the");
+	sprintf(item[11], "SIMH simulator.");
 	sprintf(item[12], "Previous menu");
 
 	pro_menu_print(pro_menu_start);
@@ -559,7 +564,7 @@ int	i;
 	pro_menu_on = 1;
 	pro_overlay_enable();
 
-	sprintf(title, "XHOMER (version %s)", PRO_VERSION);
+	sprintf(title, "XHOMER-SDL2 (version %s)", PRO_VERSION);
 	sprintf(item[0],  "Return to emulator");
 	sprintf(item[1], "Screen mode : %s", pro_screen_full?"full":"window");
 	pro_menu_concat(item[2], "rx0 : ", pro_rx_file[0], MENU_AW);
@@ -571,8 +576,9 @@ int	i;
 	sprintf(item[8], "Save configuration");
 	sprintf(item[9], "Restore defaults and reset");
 	sprintf(item[10], "Reset");
-	sprintf(item[11], "About XHOMER");
-	sprintf(item[12], "Shutdown emulator");
+	sprintf(item[11], "About XHOMER-SDL2");
+	sprintf(item[12], "Renderer    : %s", pro_sdl_opengl ? "opengl" : "software");
+	sprintf(item[13], "Shutdown emulator");
 
 	pro_menu_print(pro_menu_start);
 	pro_menu_bar(pro_menu_pos-pro_menu_start);
@@ -738,6 +744,17 @@ int	retchar, schar, menu_pos_old;
 
 		case MENU_TOP_ABOUT:
 		  pro_menu_about();
+		  break;
+
+		case MENU_TOP_RENDER:
+		  /* Switch renderer */
+		  pro_screen_close();
+		  pro_sdl_opengl = !pro_sdl_opengl;
+		  if (pro_screen_init() == PRO_FAIL) {
+		      pro_sdl_opengl = !pro_sdl_opengl;
+		      pro_screen_init();
+		  }
+		  pro_menu_top();
 		  break;
 
 	        case MENU_TOP_SHUT:

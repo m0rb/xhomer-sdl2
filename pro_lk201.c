@@ -113,57 +113,57 @@ int	key;
 	        key = PRO_LK201_LT;
 	      else if ((key == PRO_LK201_COMMA) && (pro_lk201_shift == 1))
 	      {
-	        key = PRO_LK201_ALLUPS;
 	        pro_lk201_fifo_put(PRO_LK201_LT);
 	        pro_lk201_fifo_put(PRO_LK201_SHIFT);
+	        key = PRO_NOCHAR; /* Consume the COMMA key */
 	      }
 	      else if ((key == PRO_LK201_PRINT) && (pro_lk201_ctrl == 1))
 	      {
-	        key = PRO_LK201_ALLUPS;
 	        pro_lk201_fifo_put(PRO_LK201_PF1);
 	        pro_lk201_fifo_put(PRO_LK201_CTRL);
+	        key = PRO_NOCHAR; /* Consume the PRINT key */
 	      }
 	      else if ((key == PRO_LK201_SETUP) && (pro_lk201_ctrl == 1))
 	      {
-	        key = PRO_LK201_ALLUPS;
 	        pro_lk201_fifo_put(PRO_LK201_PF2);
 	        pro_lk201_fifo_put(PRO_LK201_CTRL);
+	        key = PRO_NOCHAR; /* Consume the SETUP key */
 	      }
 	      else if ((key == PRO_LK201_FFOUR) && (pro_lk201_ctrl == 1))
 	      {
-	        key = PRO_LK201_ALLUPS;
 	        pro_lk201_fifo_put(PRO_LK201_PF3);
 	        pro_lk201_fifo_put(PRO_LK201_CTRL);
+	        key = PRO_NOCHAR; /* Consume the FFOUR key */
 	      }
 	      else if ((key == PRO_LK201_BREAK) && (pro_lk201_ctrl == 1))
 	      {
-	        key = PRO_LK201_ALLUPS;
 	        pro_lk201_fifo_put(PRO_LK201_PF4);
 	        pro_lk201_fifo_put(PRO_LK201_CTRL);
+	        key = PRO_NOCHAR; /* Consume the BREAK key */
 	      }
 	      else if ((key == PRO_LK201_INT) && (pro_lk201_ctrl == 1))
 	      {
-	        key = PRO_LK201_ALLUPS;
 	        pro_lk201_fifo_put(PRO_LK201_F17);
 	        pro_lk201_fifo_put(PRO_LK201_CTRL);
+	        key = PRO_NOCHAR; /* Consume the INT key */
 	      }
 	      else if ((key == PRO_LK201_RESUME) && (pro_lk201_ctrl == 1))
 	      {
-	        key = PRO_LK201_ALLUPS;
 	        pro_lk201_fifo_put(PRO_LK201_F18);
 	        pro_lk201_fifo_put(PRO_LK201_CTRL);
+	        key = PRO_NOCHAR; /* Consume the RESUME key */
 	      }
 	      else if ((key == PRO_LK201_CANCEL) && (pro_lk201_ctrl == 1))
 	      {
-	        key = PRO_LK201_ALLUPS;
 	        pro_lk201_fifo_put(PRO_LK201_F19);
 	        pro_lk201_fifo_put(PRO_LK201_CTRL);
+	        key = PRO_NOCHAR; /* Consume the CANCEL key */
 	      }
 	      else if ((key == PRO_LK201_MAIN) && (pro_lk201_ctrl == 1))
 	      {
-	        key = PRO_LK201_ALLUPS;
 	        pro_lk201_fifo_put(PRO_LK201_F20);
 	        pro_lk201_fifo_put(PRO_LK201_CTRL);
+	        key = PRO_NOCHAR; /* Consume the MAIN key */
 	      }
     
 	    }

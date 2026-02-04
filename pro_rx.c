@@ -38,8 +38,8 @@
 #define PRO_RX_SIZE	(PRO_RX_TRACKS*PRO_RX_SPT*PRO_RX_BPS)
 
 
-char		*pro_rx_dir[4];
-char		*pro_rx_file[4];
+char		*pro_rx_dir[4] = {NULL, NULL, NULL, NULL};
+char		*pro_rx_file[4] = {NULL, NULL, NULL, NULL};
 
 int		pro_rx_closed[4] = {0,0,0,0};	/* initial floppy door status */
 

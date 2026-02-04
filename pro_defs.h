@@ -538,7 +538,6 @@ GLOBAL int pro_la50device_port;
 GLOBAL int pro_kb_port;
 GLOBAL int pro_ptr_port;
 GLOBAL int pro_com_port;
-GLOBAL int pro_exit_on_halt;
 GLOBAL void pro_reset(void);
 GLOBAL void pro_exit(void);
 
@@ -698,6 +697,7 @@ GLOBAL void pro_vid_exit(void);
 
 GLOBAL int pro_menu(int key);
 GLOBAL void pro_menu_reset(void);
+GLOBAL int pro_menu_on;
 
 /* pro_rd.c */
 
@@ -791,3 +791,7 @@ GLOBAL void pro_overlay_enable(void);
 GLOBAL void pro_overlay_disable(void);
 GLOBAL void pro_overlay_init(int psize, int cmode, int bpixel, int wpixel);
 GLOBAL void pro_overlay_close(void);
+
+GLOBAL int pro_menu_x;
+GLOBAL int pro_menu_y;
+GLOBAL int pro_sdl_opengl;

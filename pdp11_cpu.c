@@ -600,7 +600,7 @@ LOCAL void perf_monitor_disp(int sig
 */
    tips = (sim_time - last_sim_time)/1000.;
    sprintf(title,
-	   "XHOMER up:%d"
+	   "XHOMER-SDL2 up:%d"
 	   " tips:%.0f"
 #ifdef EXTRA_STATUS
 	   " hits:%2d%%"
@@ -2191,7 +2191,7 @@ case 007:
 		if (GET_SIGN_W (src2)) src2 = src2 | ~077777;
 		if (GET_SIGN_W (R[srcspec])) src = src | ~017777777777;
 		dst = src / src2;
-		if ((dst > 077777) || (dst < -0100000)) {
+		if ((dst >= 077777) || (dst < -0100000)) {
 			V = 1;
 			C = 0;
 			break;  }

@@ -91,6 +91,12 @@ void pro_2661kb_poll_eq ()
 {
 int	schar;
 
+	/* Service SDL2 events frequently to prevent freezing */
+	#ifdef SDL2
+	extern void pro_screen_service_events(void);
+	pro_screen_service_events();
+	#endif
+
 	/* Only poll if receiver done is cleared, to avoid overrun */
 
 	/* Check if receiver is enabled */

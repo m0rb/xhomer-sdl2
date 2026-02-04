@@ -26,6 +26,7 @@
 #ifdef PRO
 #include "pdp11_defs.h"
 #include "sim_defs.h" /* For sim_gtime() */
+#include "debug_log.h"
 
 /* XXX */
 
@@ -83,6 +84,7 @@ int	interval;
 
 void pro_vid_eq ()
 {
+	/* xh_debug_log("pro_vid_eq enter skip=%d csr=0x%04x", pro_vid_skip, pro_vid_csr); */
 	/* Trigger end of frame interrupt, if enabled */
 
 	/* XXX use better int name */
@@ -95,15 +97,20 @@ void pro_vid_eq ()
 
 	if (pro_vid_skip == PRO_VID_SKIP)
 	{
+	  /* xh_debug_log("pro_vid_eq calling pro_screen_update"); */
 	  pro_screen_update();
 
 	  pro_vid_skip = 0;
 	}
 	else
+	{
+	  /* Skip frame (events will be serviced when display updates) */
 	  pro_vid_skip++;
+	}
 
 
 	/* Schedule next event */
+	/* xh_debug_log("pro_vid_eq exit schedule next"); */
 
 	pro_vid_sched();
 }

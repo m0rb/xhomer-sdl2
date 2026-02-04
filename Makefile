@@ -124,8 +124,8 @@ CC += -ffloat-store
 
 # The 1st choice runs about 15% slower than the 2nd (-O3 -fomit-frame-pointer).
 # but it (re)compiles faster and unlike the second choice, it is debuggable.
-# CC += -g -O -fno-inline
-CC += -O3 -Winline -fomit-frame-pointer
+CC += -g -O -fno-inline
+# CC += -O3 -Winline -fomit-frame-pointer
 
 # Some older gcc's need this on i386 to work around a bug.  As long as
 # omit-frame-pointer is also set, it doesn't seem to hurt performance, so
@@ -187,6 +187,14 @@ ifeq ($(PRO),Y)
   CCINCS = -I$(X11DIR)/include -I/usr/X11/include -I$(NCURSESINC)
   CCLIBS = -L$(X11DIR)/lib     -L/usr/X11/lib     -L$(NCURSESLIB)
 
+# SDL2 support (enable by setting USE_SDL2 = Y)
+USE_SDL2 = Y
+ifeq ($(USE_SDL2),Y)
+  CCDEFS += -DSDL2
+  CCINCS += $(shell sdl2-config --cflags 2>/dev/null || echo "")
+  CCLINK += $(shell sdl2-config --libs 2>/dev/null || echo "-lSDL2")
+endif
+
   # But some vendors put things in non-standard places
 
   ifeq ($(TARGET), HP-UX-A)
@@ -215,10 +223,17 @@ endif
 ###################
 # Files, Rules, etc
 
-SOURCES=$(shell /bin/ls pdp11*.c scp*.c pro*.c)
-SOURCES_XHOMER=$(SOURCES) $(shell /bin/ls term*x11.c)
-SOURCES_TEXTHOMER=$(SOURCES) term_curses.c
-SOURCES_DEPEND=$(SOURCES) $(shell /bin/ls term*x11.c term_curses.c)
+SOURCES=$(shell /bin/ls pdp11*.c scp*.c pro*.c debug_log.c)
+
+ifeq ($(USE_SDL2),Y)
+  SOURCES_XHOMER=$(SOURCES) term_sdl2.c term_overlay_sdl2.c
+  SOURCES_TEXTHOMER=$(SOURCES) term_curses.c
+  SOURCES_DEPEND=$(SOURCES) term_sdl2.c term_curses.c term_overlay_sdl2.c
+else
+  SOURCES_XHOMER=$(SOURCES) $(shell /bin/ls term*x11.c)
+  SOURCES_TEXTHOMER=$(SOURCES) term_curses.c
+  SOURCES_DEPEND=$(SOURCES) $(shell /bin/ls term*x11.c term_curses.c)
+endif
 OBJECTS=$(SOURCES_XHOMER:%.c=%.o)
 OBJECTS_TEXTHOMER=$(SOURCES_TEXTHOMER:%.c=%.o)
 PGOBJECTS=$(SOURCES_XHOMER:%.c=%.pg.o)
@@ -251,13 +266,13 @@ saveit: pdp11
 	strip pdp11-$(TARGET)
 
 date:
-	./make_version
+	make_version
 	@echo -n "#define PRO_VERSION \"" > pro_version.h
 	@echo -n `cat VERSION` >> pro_version.h
 	@echo "\"" >> pro_version.h
 
 archive:
-	./make_archive
+	make_archive
 
 clean:
 	-@rm -f *.o *~ xhomer xhomer.static texthomer texthomer.static convert_roms
@@ -328,4 +343,6 @@ term_overlay_x11.o: term_overlay_x11.c pro_defs.h pro_version.h \
   pro_config.h pro_font.h
 term_x11.o: term_x11.c \
   pro_defs.h pro_version.h \
+  pro_config.h pro_lk201.h
+term_sdl2.o: term_sdl2.c pro_defs.h pro_version.h \
   pro_config.h pro_lk201.h

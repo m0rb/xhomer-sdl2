@@ -20,6 +20,7 @@
 #include <limits.h>
 #include <signal.h>
 #include <ctype.h>
+#include "debug_log.h"
 
 #ifdef SUNOS
 /* XXX Not sure if this is always ok, but old SunOS does not have strtoul
@@ -59,7 +60,6 @@ extern t_stat ttcmdstate (void);
 extern t_stat ttclose (void);
 UNIT *sim_clock_queue = NULL;
 int32 sim_interval = 0;
-static int have_tty = 0;
 static double sim_time;
 static int32 noqueue_time;
 volatile int32 stop_cpu = 0;
@@ -67,7 +67,6 @@ t_value *sim_eval = NULL;
 t_value k1 = 1;
 int32 sim_end = 1;				/* 1 = little, 0 = big */
 unsigned char sim_flip[FLIP_SIZE];
-
 #define print_val(a,b,c,d) fprint_val (stdout, (a), (b), (c), (d))
 #define SZ_D(dp) (size_map[((dp) -> dwidth + CHAR_BIT - 1) / CHAR_BIT])
 #define SZ_R(rp) \
@@ -119,10 +118,22 @@ const size_t size_map[] = { sizeof (int8),
 	, sizeof (int64), sizeof (int64), sizeof (int64), sizeof (int64)
 #endif
 };
-
 int main (int argc, char *argv[])
 {
 char cbuf[CBUFSIZE], gbuf[CBUFSIZE], *cptr;
+int argi;
+
+for (argi = 1; argi < argc; argi++) {
+    if (argv[argi] && strcmp(argv[argi], "-d") == 0) {
+        xh_debug_enabled = 1;
+        /* Move other arguments up */
+        for (int j = argi; j < argc - 1; j++) {
+            argv[j] = argv[j+1];
+        }
+        argc--;
+        argi--;
+    }
+}
 int32 i, stat;
 FILE *fpin;
 union {int32 i; char c[sizeof (int32)]; } end_test;
@@ -167,7 +178,6 @@ static CTAB cmd_table[] = {
 	{ "REMOVE", &remove_cmd, 0 },
 	{ "HELP", &help_cmd, 0 },
 	{ NULL, NULL, 0 }  };
-
 /* Main command loop */
 
 #ifndef PRO
@@ -180,12 +190,9 @@ if ((sim_eval = calloc (sim_emax, sizeof (t_value))) == NULL) {
 	printf ("Unable to allocate examine buffer\n");
 	return 0;  };
 if ((stat = ttinit ()) != SCPE_OK) {
-        setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
-	printf ("warning: terminal initialization error\n%s\n",
+	printf ("Fatal terminal initialization error\n%s\n",
 		scp_error_messages[stat - SCPE_BASE]);
-	have_tty = 0;
-	/* return 0; */ }
-else have_tty = 1;
+	return 0;  }
 stop_cpu = 0;
 sim_interval = 0;
 sim_time = 0;
@@ -238,7 +245,6 @@ detach_all (0);
 ttclose ();
 return 0;
 }
-
 /* Exit command */
 
 t_stat exit_cmd (int flag, char *cptr)
@@ -279,7 +285,6 @@ printf ("rem{ove} <unit>          remove unit from configuration\n");
 printf ("h{elp}                   type this message\n");
 return SCPE_OK;
 }
-
 /* Set command */
 
 t_stat set_cmd (int flag, char *cptr)
@@ -337,7 +342,6 @@ dptr = find_device (gbuf, NULL);			/* find device */
 if (dptr == NULL) return SCPE_ARG;
 return show_device (dptr);
 }
-
 /* Show processors */
 
 t_stat show_device (DEVICE *dptr)
@@ -381,7 +385,6 @@ printf ("%s simulator configuration\n\n", sim_name);
 for (i = 0; (dptr = sim_devices[i]) != NULL; i++) show_device (dptr);
 return SCPE_OK;
 }
-
 t_stat show_queue (int flag)
 {
 DEVICE *dptr;
@@ -397,7 +400,7 @@ for (uptr = sim_clock_queue; uptr != NULL; uptr = uptr -> next) {
 	if (uptr == &step_unit) printf ("  Step timer");
 	else if ((dptr = find_dev_from_unit (uptr)) != NULL) {
 		printf ("  %s", dptr -> name);
-		if (dptr -> numunits > 1) printf (" unit %ld",
+		if (dptr -> numunits > 1) printf (" unit %d",
 			uptr - dptr -> units);  }
 	else printf ("  Unknown");
 	printf (" at %d\n", accum + uptr -> time);
@@ -410,7 +413,6 @@ t_stat show_time (int flag)
 printf ("Time:	%-16.0f\n", sim_time);
 return SCPE_OK;
 }
-
 /* Add and remove commands and routines
 
    ad[d]		add unit to configuration
@@ -451,7 +453,6 @@ if ((uptr -> flags & UNIT_DISABLE) && !(uptr -> flags & UNIT_DIS) &&
 	return SCPE_OK;  }
 return SCPE_ARG;					/* not valid */
 }
-
 /* Reset command and routines
 
    re[set]		reset all devices
@@ -501,7 +502,6 @@ for (i = start; (dptr = sim_devices[i]) != NULL; i++) {
 		if (reason != SCPE_OK) return reason;  }  }
 return SCPE_OK;
 }
-
 /* Load command
 
    lo[ad] filename		load specified file
@@ -519,7 +519,6 @@ reason = sim_load (loadfile);
 fclose (loadfile);
 return reason;
 }
-
 /* Attach command
 
    at[tach] unit file	attach specified unit to file
@@ -571,7 +570,6 @@ uptr -> flags = uptr -> flags | UNIT_ATT;
 uptr -> pos = 0;
 return SCPE_OK;
 }
-
 /* Detach command
 
    det[ach] all		detach all units
@@ -620,7 +618,6 @@ for (i = start; (dptr = sim_devices[i]) != NULL; i++) {
 		if (reason != SCPE_OK) return reason;  }  }
 return SCPE_OK;
 }
-
 t_stat detach_unit (UNIT *uptr)
 {
 DEVICE *dptr;
@@ -641,7 +638,6 @@ free (uptr -> filename);
 uptr -> filename = NULL;
 return (fclose (uptr -> fileref) == EOF)? SCPE_IOERR: SCPE_OK;
 }
-
 /* Save command
 
    sa[ve] filename		save state to specified file
@@ -708,7 +704,6 @@ reason = (ferror (sfile))? SCPE_IOERR: SCPE_OK;		/* error during save? */
 fclose (sfile);
 return reason;
 }
-
 /* Restore command
 
    re[store] filename		restore state from specified file
@@ -801,7 +796,6 @@ for ( ;; ) {						/* device loop */
 fclose (rfile);
 return SCPE_OK;
 }
-
 /* Run, go, cont, step commands
 
    ru[n] [new PC]	reset and start simulation
@@ -858,10 +852,10 @@ for (i = 1; (dptr = sim_devices[i]) != NULL; i++) {
 		    (UNIT_ATT + UNIT_SEQ))
 			fseek (uptr -> fileref, uptr -> pos, SEEK_SET);  }  }
 stop_cpu = 0;
-if (signal (SIGINT, int_handler) == SIG_ERR) {		/* set WRU */
+if ((int) signal (SIGINT, int_handler) == -1) {		/* set WRU */
 	printf ("Simulator interrupt handler setup failed\n");
 	return SCPE_OK;  }
-if (have_tty && ttrunstate () != SCPE_OK) {				/* set console */
+if (ttrunstate () != SCPE_OK) {				/* set console */
 	ttcmdstate ();
 	printf ("Simulator terminal setup failed\n");
 	return SCPE_OK;  }
@@ -877,7 +871,6 @@ else {	UPDATE_SIM_TIME (noqueue_time);  }
 #ifdef VMS
 printf ("\n");
 #endif
-if (pro_exit_on_halt && r == SCPE_PDP11_HALT) return exit_cmd(0, NULL);
 if (r >= SCPE_BASE) printf ("\n%s, %s: ", scp_error_messages[r - SCPE_BASE],
 	sim_PC -> name);
 else printf ("\n%s, %s: ", sim_stop_messages[r], sim_PC -> name);
@@ -897,7 +890,6 @@ if (((dptr = sim_devices[0]) != NULL) && (dptr -> examine != NULL)) {
 printf ("\n");
 return SCPE_OK;
 }
-
 /* Run time routines */
 
 /* Unit service for step timeout, originally scheduled by STEP n command
@@ -920,7 +912,6 @@ void int_handler (int sig)
 stop_cpu = 1;
 return;
 }
-
 /* Examine/deposit commands
 
    ex[amine] [unit] list		examine
@@ -1010,7 +1001,6 @@ while (*gptr != 0) {
 	gptr = tptr;  }					/* end while */
 return SCPE_OK;
 }
-
 /* Loop controllers for examine/deposit
 
    exdep_reg_loop	examine/deposit range of registers
@@ -1035,7 +1025,7 @@ for (rptr = lowr; rptr <= highr; rptr++) {
 return SCPE_OK;
 }
 
-t_stat exdep_addr_loop (int flag, int32 sw, char *cptr, t_addr low,
+t_stat exdep_addr_loop (int flag, int32 sw, char *ptr, t_addr low,
 	t_addr high, DEVICE *dptr, UNIT *uptr)
 {
 int32 i;
@@ -1052,12 +1042,11 @@ for (i = low; i <= high; i = i + (dptr -> aincr)) {
 		reason = ex_addr (flag, sw, i, dptr, uptr);
 		if (reason > SCPE_OK) return reason;  }
 	if (flag != EX_E) {
-		reason = dep_addr (flag, sw, cptr, i, dptr, uptr, reason);
+		reason = dep_addr (flag, sw, ptr, i, dptr, uptr, reason);
 		if (reason > SCPE_OK) return reason;  }
 	if (reason < SCPE_OK) i = i - (reason * dptr -> aincr);  }
 return SCPE_OK;
 }
-
 /* Examine register routine
 
    Inputs:
@@ -1111,7 +1100,6 @@ else val = *(((unsigned int64 *) rptr -> loc) + idx);
 val = (val >> rptr -> offset) & ((k1 << rptr -> width) - 1);
 return val;
 }
-
 /* Deposit register routine
 
    Inputs:
@@ -1177,7 +1165,6 @@ else PUT_RVAL (int64, rptr, idx, val, mask);
 #endif
 return;
 }
-
 /* Examine address routine
 
    Inputs:
@@ -1250,7 +1237,6 @@ if (flag & EX_I) printf ("	");
 else printf ("\n");
 return reason;
 }
-
 /* Deposit address routine
 
    Inputs:
@@ -1320,7 +1306,6 @@ for (i = 0, j = addr; i < count; i++, j = j + dptr -> aincr) {
 				return SCPE_IOERR;  }  }  }  }
 return reason;
 }
-
 /* String processing routines
 
    read_line		read line
@@ -1367,7 +1352,6 @@ if (mchar && (*iptr == mchar)) iptr++;			/* skip terminator */
 while (isspace (*iptr)) iptr++;				/* absorb spaces */
 return iptr;
 }
-
 /* get_yn		yes/no question
 
    Inputs:
@@ -1410,7 +1394,6 @@ if (errno || (cptr == tptr) || (val > max) || (*tptr != 0)) *status = SCPE_ARG;
 else *status = SCPE_OK;
 return val;
 }
-
 /* Find_device		find device matching input string
 
    Inputs:
@@ -1457,7 +1440,6 @@ for (i = 0; (dptr = sim_devices[i]) != NULL; i++) {
 		if (uptr == (dptr -> units + j)) return dptr;  }  }
 return NULL;
 }
-
 /* find_reg		find register matching input string
 
    Inputs:
@@ -1505,7 +1487,6 @@ for (cptr++; (isspace (*cptr) == 0) && (*cptr != 0); cptr++) {
 	sw = sw | SWMASK (*cptr);  }
 return sw;
 }
-
 /* General radix printing routine
 
    Inputs:
@@ -1547,7 +1528,6 @@ if (format != PV_LEFT) {
 if (fputs (&dbuf[d], stream) == EOF) return SCPE_IOERR;
 return SCPE_OK;
 }
-
 /* Event queue routines
 
 	sim_activate		add entry to event queue
@@ -1602,7 +1582,6 @@ do {	uptr = sim_clock_queue;				/* get first */
 
 return reason;
 }
-
 /* Activate (queue) event
 
    Inputs:
@@ -1638,7 +1617,6 @@ if (cptr != NULL) cptr -> time = cptr -> time - uptr -> time;
 sim_interval = sim_clock_queue -> time;
 return SCPE_OK;
 }
-
 /* Cancel (dequeue) event
 
    Inputs:
@@ -1667,7 +1645,6 @@ if (sim_clock_queue != NULL) sim_interval = sim_clock_queue -> time;
 else sim_interval = noqueue_time = NOQUEUE_WAIT;
 return SCPE_OK;
 }
-
 /* Test for entry in queue, return activation time
 
    Inputs:
@@ -1701,7 +1678,6 @@ if (sim_clock_queue == NULL) { UPDATE_SIM_TIME (noqueue_time);  }
 else  {	UPDATE_SIM_TIME (sim_clock_queue -> time);  }
 return sim_time;
 }
-
 /* Endian independent binary I/O package
 
    For consistency, all binary data read and written by the simulator
@@ -1770,4 +1746,3 @@ for (i = nbuf; i > 0; i--) {
 	total = total + c;  }
 return total;
 }
-
