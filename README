@@ -1,6 +1,18 @@
 Xhomer README
 -------------
 
+This is an SDL2 enhanced for of Xhomer.
+The viewport no longer requires DGA for fullscreen access. 
+Software and OpenGL renderers are supported.
+
+I'm just a hobbyist and do not consider this to be stable whatsoever. 
+Only tested under GNU/Linux on x86_64.
+
+Good luck, have fun! 
+
+ --morb
+
+
 License
 -------
 Please read the file LICENSE, in this directory, for details.
