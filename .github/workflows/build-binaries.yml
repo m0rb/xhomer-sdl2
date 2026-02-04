@@ -1,0 +1,49 @@
+name: Build Binaries
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            target: linux
+            cc: gcc
+            deps: sudo apt-get update && sudo apt-get install -y libsdl2-dev
+          - os: macos-latest
+            target: macos
+            cc: gcc
+            deps: brew install sdl2
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: ${{ matrix.deps }}
+
+      - name: Build xhomer
+        run: |
+          make clean
+          make
+
+      - name: Build static xhomer
+        run: |
+          make xhomer.static
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: xhomer-${{ matrix.target }}
+          path: |
+            xhomer
+            xhomer.static
