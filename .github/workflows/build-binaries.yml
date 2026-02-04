@@ -63,6 +63,13 @@ jobs:
         run: |
           mkdir -p xhomer-${{ matrix.target }}
           cp xhomer xhomer-${{ matrix.target }}/
+          cp *.ram xhomer-${{ matrix.target }}/
+          cp *.rom xhomer-${{ matrix.target }}/
+          cp *.cfg xhomer-${{ matrix.target }}/
+          cp README xhomer-${{ matrix.target }}/
+          cp LICENSE xhomer-${{ matrix.target }}/
+          cp COPYING xhomer-${{ matrix.target }}/
+          cp SIMH xhomer-${{ matrix.target }}/
           if [ -f xhomer.static ]; then cp xhomer.static xhomer-${{ matrix.target }}/; fi
           tar -czvf xhomer-${{ matrix.target }}.tar.gz xhomer-${{ matrix.target }}
 
