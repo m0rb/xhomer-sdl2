@@ -1,8 +1,10 @@
 Xhomer README
 -------------
 
-This is an SDL2 enhanced for of Xhomer.
-The viewport no longer requires DGA for fullscreen access. 
+This is an SDL2 enhanced fork of Xhomer.
+The viewport no longer requires a suid root binary / DGA 
+for fullscreen access. 
+
 Software and OpenGL renderers are supported.
 
 I'm just a hobbyist and do not consider this to be stable whatsoever. 
