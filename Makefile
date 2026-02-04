@@ -245,7 +245,7 @@ xhomer: $(OBJECTS)
 	$(CC) $^ $(CCLIBS) $(CCLINK) -o $@
 
 xhomer.static: $(OBJECTS)
-	$(CC) $^ $(CCLIBS) $(CCLINK) -static -ldl -o $@
+	$(CC) $^ $(CCLIBS) $(shell sdl2-config --static-libs) -o $@
 	strip $@
 
 texthomer: $(OBJECTS_TEXTHOMER)
